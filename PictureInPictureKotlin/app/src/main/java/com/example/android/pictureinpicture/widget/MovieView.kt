@@ -323,7 +323,7 @@ class MovieView @JvmOverloads constructor(
     val isPlaying: Boolean
         get() = mediaPlayer?.isPlaying ?: false
 
-    private fun play() {
+    fun play() {
         if (mediaPlayer == null) {
             return
         }

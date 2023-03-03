@@ -301,7 +301,7 @@ class MovieActivity : AppCompatActivity() {
         private var indexInPlaylist: Int = 1
 
         override fun onPlay() {
-//            movieView.play()
+            movieView.play()
         }
 
         override fun onPause() {
