@@ -16,6 +16,7 @@
 
 package com.example.android.pictureinpicture
 
+import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -26,6 +27,7 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.View
@@ -34,6 +36,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android.pictureinpicture.databinding.MainActivityBinding
+
 
 /** Intent action for stopwatch controls from Picture-in-Picture mode.  */
 private const val ACTION_STOPWATCH_CONTROL = "stopwatch_control"
@@ -79,8 +82,14 @@ class MainActivity : AppCompatActivity() {
         binding.clear.setOnClickListener { viewModel.clear() }
         binding.startOrPause.setOnClickListener { viewModel.startOrPause() }
         binding.pip.setOnClickListener {
-            enterPictureInPictureMode(updatePictureInPictureParams(viewModel.started.value == true))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                enterPictureInPictureMode(updatePictureInPictureParams(viewModel.started.value == true))
+            }
         }
+
+        binding.pip.isEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        binding.pipAndroidVersionError.visibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.GONE else View.VISIBLE
+
         binding.switchExample.setOnClickListener {
             startActivity(Intent(this@MainActivity, MovieActivity::class.java))
             finish()
@@ -91,11 +100,15 @@ class MainActivity : AppCompatActivity() {
             binding.startOrPause.setImageResource(
                 if (started) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp
             )
-            updatePictureInPictureParams(started)
+            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                updatePictureInPictureParams(started)
+            }
         }
         // Handle events from the action icons on the picture-in-picture mode.
         registerReceiver(broadcastReceiver, IntentFilter(ACTION_STOPWATCH_CONTROL))
     }
+
+
 
     // This is called when the activity gets into or out of the picture-in-picture mode.
     override fun onPictureInPictureModeChanged(

@@ -19,6 +19,8 @@ package com.example.android.pictureinpicture.widget
 import android.content.Context
 import android.graphics.Color
 import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -321,11 +323,11 @@ class MovieView @JvmOverloads constructor(
     val isPlaying: Boolean
         get() = mediaPlayer?.isPlaying ?: false
 
-    fun play() {
+    private fun play() {
         if (mediaPlayer == null) {
             return
         }
-        mediaPlayer!!.start()
+        mediaPlayer?.start()
         adjustToggleState()
         keepScreenOn = true
         movieListener?.onMovieStarted()
@@ -346,10 +348,18 @@ class MovieView @JvmOverloads constructor(
         if (videoResourceId == 0) {
             return
         }
-        mediaPlayer = MediaPlayer()
-        mediaPlayer?.let { player ->
-            player.setSurface(surface)
-            startVideo()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mediaPlayer = MediaPlayer()
+            mediaPlayer?.let { player ->
+                player.setSurface(surface)
+                startVideo()
+            }
+        } else {
+            mediaPlayer = MediaPlayer.create(context, R.raw.vid_bigbuckbunny)
+            mediaPlayer?.let { player ->
+                player.setSurface(surface)
+                startVideo()
+            }
         }
     }
 
@@ -358,30 +368,34 @@ class MovieView @JvmOverloads constructor(
      */
     fun startVideo() {
         mediaPlayer?.let { player ->
-            player.reset()
-            try {
-                resources.openRawResourceFd(videoResourceId).use { fd ->
-                    player.setDataSource(fd)
-                    player.setOnPreparedListener { mediaPlayer ->
-                        // Adjust the aspect ratio of this view
-                        requestLayout()
-                        if (savedCurrentPosition > 0) {
-                            mediaPlayer.seekTo(savedCurrentPosition)
-                            savedCurrentPosition = 0
-                        } else {
-                            // Start automatically
-                            play()
+            player.setOnCompletionListener {
+                adjustToggleState()
+                keepScreenOn = false
+                movieListener?.onMovieStopped()
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                player.reset()
+                try {
+                    resources.openRawResourceFd(videoResourceId).use { fd ->
+                        player.setDataSource(fd)
+                        player.setOnPreparedListener { mediaPlayer ->
+                            // Adjust the aspect ratio of this view
+                            requestLayout()
+                            if (savedCurrentPosition > 0) {
+                                mediaPlayer.seekTo(savedCurrentPosition)
+                                savedCurrentPosition = 0
+                            } else {
+                                // Start automatically
+                                play()
+                            }
                         }
+                        player.prepare()
                     }
-                    player.setOnCompletionListener {
-                        adjustToggleState()
-                        keepScreenOn = false
-                        movieListener?.onMovieStopped()
-                    }
-                    player.prepare()
+                } catch (e: IOException) {
+                    Log.e(TAG, "Failed to open video", e)
                 }
-            } catch (e: IOException) {
-                Log.e(TAG, "Failed to open video", e)
+            } else {
+                play()
             }
         }
     }

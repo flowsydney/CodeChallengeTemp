@@ -45,4 +45,5 @@
     ]]></string>
     <string name="switch_custom">Switch to custom actions example</string>
     <string name="title_bigbuckbunny">Big Buck Bunny</string>
+    <string name="android_version_too_low">Unfortunately your version of Android does not allow you to use the Picture in Picture feature.</string>
 </resources>
