@@ -16,6 +16,7 @@
 
 package com.example.android.pictureinpicture
 
+import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -26,14 +27,17 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.View
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android.pictureinpicture.databinding.MainActivityBinding
+
 
 /** Intent action for stopwatch controls from Picture-in-Picture mode.  */
 private const val ACTION_STOPWATCH_CONTROL = "stopwatch_control"
@@ -79,8 +83,17 @@ class MainActivity : AppCompatActivity() {
         binding.clear.setOnClickListener { viewModel.clear() }
         binding.startOrPause.setOnClickListener { viewModel.startOrPause() }
         binding.pip.setOnClickListener {
-            enterPictureInPictureMode(updatePictureInPictureParams(viewModel.started.value == true))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val pipParams = updatePictureInPictureParams(viewModel.started.value == true)
+                pipParams?.let {
+                    enterPictureInPictureMode(it)
+                }
+            }
         }
+
+        binding.pip.isEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        binding.pipAndroidVersionError.visibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.GONE else View.VISIBLE
+
         binding.switchExample.setOnClickListener {
             startActivity(Intent(this@MainActivity, MovieActivity::class.java))
             finish()
@@ -91,11 +104,15 @@ class MainActivity : AppCompatActivity() {
             binding.startOrPause.setImageResource(
                 if (started) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp
             )
-            updatePictureInPictureParams(started)
+            if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                updatePictureInPictureParams(started)
+            }
         }
         // Handle events from the action icons on the picture-in-picture mode.
         registerReceiver(broadcastReceiver, IntentFilter(ACTION_STOPWATCH_CONTROL))
     }
+
+
 
     // This is called when the activity gets into or out of the picture-in-picture mode.
     override fun onPictureInPictureModeChanged(
@@ -117,10 +134,23 @@ class MainActivity : AppCompatActivity() {
      * Updates the parameters of the picture-in-picture mode for this activity based on the current
      * [started] state of the stopwatch.
      */
-    private fun updatePictureInPictureParams(started: Boolean): PictureInPictureParams {
-        val visibleRect = Rect()
-        binding.stopwatchBackground.getGlobalVisibleRect(visibleRect)
-        val params = PictureInPictureParams.Builder()
+    private fun updatePictureInPictureParams(started: Boolean): PictureInPictureParams? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val visibleRect = Rect()
+            binding.stopwatchBackground.getGlobalVisibleRect(visibleRect)
+            val params = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                getPictureInPictureForS(started, visibleRect)
+            else
+                getPictureInPictureBelowS(started, visibleRect)
+            setPictureInPictureParams(params)
+            return params
+        }
+        return null
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun getPictureInPictureForS(started: Boolean, visibleRect: Rect): PictureInPictureParams {
+        return PictureInPictureParams.Builder()
             // Set action items for the picture-in-picture mode. These are the only custom controls
             // available during the picture-in-picture mode.
             .setActions(
@@ -132,23 +162,7 @@ class MainActivity : AppCompatActivity() {
                         REQUEST_CLEAR,
                         CONTROL_TYPE_CLEAR
                     ),
-                    if (started) {
-                        // "Pause" action when the stopwatch is already started.
-                        createRemoteAction(
-                            R.drawable.ic_pause_24dp,
-                            R.string.pause,
-                            REQUEST_START_OR_PAUSE,
-                            CONTROL_TYPE_START_OR_PAUSE
-                        )
-                    } else {
-                        // "Start" action when the stopwatch is not started.
-                        createRemoteAction(
-                            R.drawable.ic_play_arrow_24dp,
-                            R.string.start,
-                            REQUEST_START_OR_PAUSE,
-                            CONTROL_TYPE_START_OR_PAUSE
-                        )
-                    }
+                    getStartPauseRemoteAction(started)
                 )
             )
             // Set the aspect ratio of the picture-in-picture mode.
@@ -163,14 +177,42 @@ class MainActivity : AppCompatActivity() {
             // that the picture-in-picture mode is resized with a cross fade animation.
             .setSeamlessResizeEnabled(false)
             .build()
-        setPictureInPictureParams(params)
-        return params
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getPictureInPictureBelowS(started: Boolean, visibleRect: Rect): PictureInPictureParams {
+        return PictureInPictureParams.Builder()
+            .setActions(
+                listOf(
+                    createRemoteAction(
+                        R.drawable.ic_refresh_24dp,
+                        R.string.clear,
+                        REQUEST_CLEAR,
+                        CONTROL_TYPE_CLEAR
+                    ),
+                    getStartPauseRemoteAction(started)
+                )
+            )
+            .setAspectRatio(Rational(16, 9))
+            .setSourceRectHint(visibleRect)
+            .build()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getStartPauseRemoteAction(started: Boolean): RemoteAction {
+        return createRemoteAction(
+            if (started) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp,
+            if (started) R.string.pause else R.string.start,
+            REQUEST_START_OR_PAUSE,
+            CONTROL_TYPE_START_OR_PAUSE
+        )
     }
 
     /**
      * Creates a [RemoteAction]. It is used as an action icon on the overlay of the
      * picture-in-picture mode.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createRemoteAction(
         @DrawableRes iconResId: Int,
         @StringRes titleResId: Int,

@@ -42,10 +42,10 @@
         android:layout_margin="@dimen/spacing_medium"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_refresh_24dp"
-        android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="@id/stopwatch_background"
         app:layout_constraintStart_toStartOf="@id/stopwatch_background"
-        app:layout_constraintTop_toTopOf="@id/stopwatch_background" />
+        app:layout_constraintTop_toTopOf="@id/stopwatch_background"
+        app:tint="@android:color/white" />
 
     <ImageButton
         android:id="@+id/start_or_pause"
@@ -54,10 +54,10 @@
         android:layout_margin="@dimen/spacing_medium"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_play_arrow_24dp"
-        android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="@id/stopwatch_background"
         app:layout_constraintEnd_toEndOf="@id/stopwatch_background"
-        app:layout_constraintTop_toTopOf="@id/stopwatch_background" />
+        app:layout_constraintTop_toTopOf="@id/stopwatch_background"
+        app:tint="@android:color/white" />
 
     <TextView
         android:id="@+id/time"
@@ -101,7 +101,15 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/stopwatch_background" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/pipAndroidVersionError"
+                android:textColor="@color/red"
+                android:text="@string/android_version_too_low"
+                />
+
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_medium"

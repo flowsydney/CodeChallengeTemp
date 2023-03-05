@@ -56,6 +56,14 @@
                 android:drawableTint="@android:color/black"
                 android:text="@string/enter_picture_in_picture" />
 
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/pipAndroidVersionError"
+                android:textColor="@color/red"
+                android:text="@string/android_version_too_low"
+                />
+
             <TextView
                 android:id="@+id/explanation"
                 android:layout_width="match_parent"
