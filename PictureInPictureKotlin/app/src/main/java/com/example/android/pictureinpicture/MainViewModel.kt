@@ -16,30 +16,15 @@
 
 package com.example.android.pictureinpicture
 
-import android.os.SystemClock
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.android.awaitFrame
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlin.time.Duration
 
-class MainViewModel: ViewModel() {
+class MainViewModel(private val stopWatchTimer: ClockStopWatchTimer): ViewModel() {
 
-    private var job: Job? = null
 
-    private var startUptimeMillis = SystemClock.uptimeMillis()
-    private val timeMillis = MutableLiveData(0L)
-
-    private val _started = MutableLiveData(false)
-
-    val started: LiveData<Boolean> = _started
-    val time = timeMillis.map { millis ->
+    val started: MutableLiveData<Boolean> = this.stopWatchTimer.started.map { it } as MutableLiveData<Boolean>
+    val time: MutableLiveData<String> = this.stopWatchTimer.timeMillis.map { millis ->
         val minutes = millis / 1000 / 60
         val m = minutes.toString().padStart(2, '0')
         val seconds = (millis / 1000) % 60
@@ -47,27 +32,20 @@ class MainViewModel: ViewModel() {
         val hundredths = (millis % 1000) / 10
         val h = hundredths.toString().padStart(2, '0')
         "$m:$s:$h"
+    } as MutableLiveData<String>
+
+    init {
+        started.postValue(false)
     }
 
     /**
      * Starts the stopwatch if it is not yet started, or pauses it if it is already started.
      */
     fun startOrPause() {
-        if (_started.value == true) {
-            _started.value = false
-            job?.cancel()
+        if (stopWatchTimer.started.value == true) {
+            stopWatchTimer.pause()
         } else {
-            _started.value = true
-            job = viewModelScope.launch { start() }
-        }
-    }
-
-    private suspend fun CoroutineScope.start() {
-        startUptimeMillis = SystemClock.uptimeMillis() - (timeMillis.value ?: 0L)
-        while (isActive) {
-            timeMillis.value = SystemClock.uptimeMillis() - startUptimeMillis
-            // Updates on every render frame.
-            awaitFrame()
+            stopWatchTimer.start()
         }
     }
 
@@ -75,7 +53,7 @@ class MainViewModel: ViewModel() {
      * Clears the stopwatch to 00:00:00.
      */
     fun clear() {
-        startUptimeMillis = SystemClock.uptimeMillis()
-        timeMillis.value = 0L
+        stopWatchTimer.pause()
+        stopWatchTimer.reset()
     }
 }

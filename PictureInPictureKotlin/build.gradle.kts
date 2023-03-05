@@ -19,10 +19,10 @@ buildscript {
         google()
         mavenCentral()
     }
-    ext.kotlin_version = '1.5.21'
+    val kotlin_version = "1.7.21"
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:7.0.0'
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath("com.android.tools.build:gradle:7.0.0")
     }
 }
 
@@ -33,6 +33,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register("clean",Delete::class){
+    delete(rootProject.buildDir)
 }

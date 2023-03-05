@@ -16,7 +16,6 @@
 
 package com.example.android.pictureinpicture
 
-import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -24,7 +23,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -36,6 +34,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.android.pictureinpicture.databinding.MainActivityBinding
 
 
@@ -55,7 +54,7 @@ private const val REQUEST_START_OR_PAUSE = 4
  */
 class MainActivity : AppCompatActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels() { MainViewModelFactory(lifecycleScope) }
     private lateinit var binding: MainActivityBinding
 
     /**
@@ -115,10 +114,9 @@ class MainActivity : AppCompatActivity() {
 
 
     // This is called when the activity gets into or out of the picture-in-picture mode.
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: Configuration?
-    ) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
             // Hide in-app buttons. They cannot be interacted in the picture-in-picture mode, and
             // their features are provided as the action icons.
