@@ -301,14 +301,14 @@ class MovieView @JvmOverloads constructor(
     /**
      * Fast-forward the video.
      */
-    private fun fastForward() {
+     fun fastForward() {
         mediaPlayer?.let { it.seekTo(it.currentPosition + FAST_FORWARD_REWIND_INTERVAL) }
     }
 
     /**
      * Fast-rewind the video.
      */
-    private fun fastRewind() {
+     fun fastRewind() {
         mediaPlayer?.let { it.seekTo(it.currentPosition - FAST_FORWARD_REWIND_INTERVAL) }
     }
 

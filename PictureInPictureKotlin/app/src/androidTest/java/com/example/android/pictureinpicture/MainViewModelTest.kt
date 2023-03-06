@@ -25,9 +25,7 @@ class MainViewModelTest {
 
     @Before
     fun setUp() {
-        stopWatchTimer =
-            ClockStopWatchTimer(createTestCoroutineScope(TestCoroutineDispatcher() + TestCoroutineExceptionHandler()))
-        viewModel = MainViewModel(stopWatchTimer)
+        viewModel = MainViewModel()
         viewModel.clear()
     }
 
@@ -35,21 +33,21 @@ class MainViewModelTest {
     @Test
     fun startOrPause_should_start_the_stopwatch_not_yet_started() = runTest {
         stopWatchTimer.started.postValue(false)
-        viewModel.startOrPause()
+        viewModel.startOrPause(intent.action)
         assertEquals(true, stopWatchTimer.started.value)
     }
 
     @Test
     fun startOrPause_should_pause_stopwatch_already_started() {
-        viewModel.startOrPause()
-        viewModel.startOrPause()
+        viewModel.startOrPause(intent.action)
+        viewModel.startOrPause(intent.action)
         assertEquals(false, stopWatchTimer.started.value)
     }
 
     @Test
     fun clear_should_reset_stopwatch_to_00() {
-        viewModel.startOrPause()
-        viewModel.startOrPause()
+        viewModel.startOrPause(intent.action)
+        viewModel.startOrPause(intent.action)
         viewModel.clear()
         assertEquals(false, stopWatchTimer.started.value,)
         assertEquals(null, viewModel.time.value)
@@ -63,8 +61,7 @@ class ClockStopWatchTimerTest {
 
     @Before
     fun setup() {
-        stopWatchTimer =
-            ClockStopWatchTimer(createTestCoroutineScope(TestCoroutineDispatcher() + TestCoroutineExceptionHandler()))
+
     }
 
     @Test

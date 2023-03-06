@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/stopWatchFragment">
+
+    <fragment
+        android:id="@+id/stopWatchFragment"
+        android:name="com.example.android.pictureinpicture.StopWatchFragment">
+        <action
+            android:id="@+id/action_stopwatch_to_movie"
+            app:destination="@id/movieFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/movieFragment"
+        android:name="com.example.android.pictureinpicture.MovieFragment">
+        <action
+            android:id="@+id/action_movie_to_stopwatch"
+            app:destination="@id/stopWatchFragment" />
+    </fragment>
+
+</navigation>

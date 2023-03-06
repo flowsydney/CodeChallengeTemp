@@ -16,15 +16,18 @@
 
 package com.example.android.pictureinpicture
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
+import kotlinx.coroutines.CoroutineScope
 
-class MainViewModel(private val stopWatchTimer: ClockStopWatchTimer): ViewModel() {
+class MainViewModel: ViewModel() {
+    private val movieControlState = MutableLiveData<MovieControlState>()
+    private val movieState = MutableLiveData<MovieState>()
 
-
-    val started: MutableLiveData<Boolean> = this.stopWatchTimer.started.map { it } as MutableLiveData<Boolean>
-    val time: MutableLiveData<String> = this.stopWatchTimer.timeMillis.map { millis ->
+    val started: LiveData<Boolean> = ClockStopWatchTimer.started.map { it }
+    val time: LiveData<String> = ClockStopWatchTimer.timeMillis.map { millis ->
         val minutes = millis / 1000 / 60
         val m = minutes.toString().padStart(2, '0')
         val seconds = (millis / 1000) % 60
@@ -32,28 +35,70 @@ class MainViewModel(private val stopWatchTimer: ClockStopWatchTimer): ViewModel(
         val hundredths = (millis % 1000) / 10
         val h = hundredths.toString().padStart(2, '0')
         "$m:$s:$h"
-    } as MutableLiveData<String>
+    }
 
     init {
-        started.postValue(false)
+        ClockStopWatchTimer.started.postValue(false)
+    }
+
+    fun setMovieState(state: MovieState) {
+        movieState.postValue(state)
+    }
+    fun getMovieState(): LiveData<MovieState> {
+        return movieState
+    }
+    fun setMovieControlState(state: MovieControlState) {
+        movieControlState.postValue(state)
+    }
+    fun getMovieControlState(): LiveData<MovieControlState> {
+        return movieControlState
     }
 
     /**
      * Starts the stopwatch if it is not yet started, or pauses it if it is already started.
      */
-    fun startOrPause() {
-        if (stopWatchTimer.started.value == true) {
-            stopWatchTimer.pause()
-        } else {
-            stopWatchTimer.start()
+    fun startOrPause(action: String) {
+        when (action) {
+            ACTION_STOPWATCH_CONTROL -> {
+                if (ClockStopWatchTimer.started.value == true) {
+                    ClockStopWatchTimer.pause()
+                } else {
+                    ClockStopWatchTimer.start()
+                }
+            }
+            ACTION_MOVIE_CONTROL -> {
+               if (movieState.value != MovieState.PAUSE) {
+                   setMovieState(MovieState.PAUSE)
+               } else {
+                   setMovieState(MovieState.PLAY)
+               }
+            }
         }
     }
+
 
     /**
      * Clears the stopwatch to 00:00:00.
      */
     fun clear() {
-        stopWatchTimer.pause()
-        stopWatchTimer.reset()
+        ClockStopWatchTimer.pause()
+        ClockStopWatchTimer.reset()
     }
+
+    fun setCoroutineScope(coroutineScope: CoroutineScope) {
+       ClockStopWatchTimer.viewModelScope = coroutineScope
+    }
+
+}
+
+
+enum class MovieState {
+    PLAY,
+    PAUSE,
+    FASTFORWARD,
+    REWIND
+}
+enum class MovieControlState {
+    SHOW_CONTROL,
+    HIDE_CONTROL
 }
