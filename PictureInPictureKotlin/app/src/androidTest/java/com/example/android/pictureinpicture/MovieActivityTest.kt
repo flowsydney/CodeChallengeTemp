@@ -31,6 +31,8 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.testing.launchFragment
+import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.filters.LargeTest
 import com.example.android.pictureinpicture.widget.MovieView
@@ -49,8 +51,7 @@ import org.junit.runner.RunWith
 @LargeTest
 class MovieActivityTest {
 
-    @Rule @JvmField
-    val rule = ActivityScenarioRule(MovieActivity::class.java)
+
 
     @Test
     fun movie_playingOnPip() {
@@ -62,9 +63,9 @@ class MovieActivityTest {
         onView(withId(R.id.minimize)).perform(click())
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         // The Activity is paused. We cannot use Espresso to test paused activities.
-        rule.scenario.onActivity { activity ->
+        launchFragmentInContainer<MovieFragment>() {
             // We are now in Picture-in-Picture mode
-            assertThat(activity.isInPictureInPictureMode).isTrue()
+            assertThat(it.activity.isInPictureInPictureMode).isTrue()
             val view = activity.findViewById<MovieView>(R.id.movie)
             assertNotNull(view)
             // The video should still be playing
@@ -95,11 +96,11 @@ class MovieActivityTest {
 
     @Test
     fun fullscreen_enabledOnLandscape() {
-        rule.scenario.onActivity { activity ->
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        launchFragmentInContainer {
+           requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        rule.scenario.onActivity { activity ->
+       launchFragment<MovieFragment> {
             val insets = ViewCompat.getRootWindowInsets(activity.window.decorView)!!
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             assertThat(systemBars.left).isEqualTo(0)
