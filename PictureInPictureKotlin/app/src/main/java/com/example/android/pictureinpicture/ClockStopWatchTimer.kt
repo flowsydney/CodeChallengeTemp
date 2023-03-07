@@ -3,16 +3,13 @@ package com.example.android.pictureinpicture
 import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.android.awaitFrame
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
-open class ClockStopWatchTimer(private val viewModelScope: CoroutineScope): StopWatchTimer {
+object ClockStopWatchTimer: StopWatchTimer {
 
     var job: Job? = null
-
+    var viewModelScope: CoroutineScope? = null
     private var startUptimeMillis = SystemClock.uptimeMillis()
     private val _timeMillis = MutableLiveData(0L)
 
@@ -27,7 +24,7 @@ open class ClockStopWatchTimer(private val viewModelScope: CoroutineScope): Stop
     override fun start() {
         if (started.value == true) return
         _started.postValue(true)
-        job = viewModelScope.launch { startTimer() }
+        job = viewModelScope?.launch { startTimer() }
     }
 
     override fun pause() {
@@ -49,5 +46,9 @@ open class ClockStopWatchTimer(private val viewModelScope: CoroutineScope): Stop
             // Updates on every render frame.
             awaitFrame()
         }
+    }
+
+    fun destroyCoroutine() {
+        viewModelScope?.cancel()
     }
 }
